@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Toast, { showToast } from "@/components/Toast";
-import api from "@/lib/api";
+import api, { normalizeError } from "@/lib/api";
+import { AxiosError } from "axios";
 
 const ALL_SKILLS = ["Python", "React", "Next.js", "TypeScript", "Tailwind", "Machine Learning", "FastAPI", "Node.js"];
 
@@ -11,18 +12,34 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>({ name: "", email: "", phone: "", location: "" });
   const [skills, setSkills] = useState<string[]>(["Python", "React", "Next.js", "TypeScript"]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { router.push("/login"); return; }
-    api.get("/auth/me").then(r => setUser(r.data)).catch(() => router.push("/login"));
+    api.get("/auth/me")
+      .then(r => setUser(r.data))
+      .catch(() => router.push("/login"))
+      .finally(() => setLoading(false));
   }, []);
 
   const save = async () => {
     try {
       await api.put("/auth/me", { name: user.name });
       showToast("✅ Profile updated!");
-    } catch { showToast("❌ Update failed."); }
+    } catch (e) {
+      const err = normalizeError(e as AxiosError);
+      showToast(`❌ ${err.message}`);
+    }
   };
+
+  if (loading) {
+    return (
+      <div style={{ background: "#0a0a0f", minHeight: "100vh" }}>
+        <Navbar />
+        <div style={{ padding: 24, color: "#9ca3af", fontSize: 13 }}>Loading profile...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "#0a0a0f", minHeight: "100vh" }}>

@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import api from "@/lib/api";
+import api, { normalizeError } from "@/lib/api";
+import { AxiosError } from "axios";
 
 export default function JobsPage() {
   const router = useRouter();
@@ -10,10 +11,15 @@ export default function JobsPage() {
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [type, setType] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { router.push("/login"); return; }
-    api.get("/jobs/").then(r => setJobs(r.data)).catch(() => {});
+    api.get("/jobs/")
+      .then(r => setJobs(r.data))
+      .catch((e) => setError(normalizeError(e as AxiosError).message))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = jobs.filter(j =>
@@ -43,9 +49,16 @@ export default function JobsPage() {
           </select>
         </div>
 
+        {error && (
+          <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", borderRadius: 8, padding: "10px 14px", fontSize: 12, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
+
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filtered.length === 0 && <div style={{ color: "#6b7280", padding: 24 }}>No jobs found.</div>}
-          {filtered.map((j) => (
+          {loading && <div style={{ color: "#6b7280", padding: 24 }}>Loading jobs...</div>}
+          {!loading && filtered.length === 0 && !error && <div style={{ color: "#6b7280", padding: 24 }}>No jobs found.</div>}
+          {!loading && filtered.map((j) => (
             <div key={j.id} className="job-card">
               <div>
                 <span className="badge b-purple" style={{ marginBottom: 6, display: "inline-block" }}>{j.type}</span>

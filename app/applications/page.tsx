@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
-import api from "@/lib/api";
+import api, { normalizeError } from "@/lib/api";
+import { AxiosError } from "axios";
 
 type Application = {
   id: number;
@@ -33,12 +34,20 @@ export default function ApplicationsPage() {
   const router = useRouter();
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { router.push("/login"); return; }
     api.get("/applications/my")
       .then(r => setApps(r.data))
-      .catch(() => router.push("/login"))
+      .catch((e) => {
+        const err = normalizeError(e as AxiosError);
+        if (err.status === 401) {
+          router.push("/login");
+        } else {
+          setError(err.message);
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -64,6 +73,12 @@ export default function ApplicationsPage() {
             <span className="badge b-hired">Hired ({counts.hired})</span>
           </div>
         </div>
+
+        {error && (
+          <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", borderRadius: 8, padding: "10px 14px", fontSize: 12, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
 
         {/* Table */}
         <div className="card">
