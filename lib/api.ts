@@ -1,6 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const api = axios.create({ baseURL: "http://localhost:8000" });
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://hiresense-backend-0i38.onrender.com";
+
+const api = axios.create({ baseURL: API_BASE_URL });
 
 // ---- request interceptor: attach JWT (unchanged from your original) ----
 api.interceptors.request.use((config) => {
@@ -38,7 +40,7 @@ api.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const { data } = await axios.post("http://localhost:8000/auth/refresh", {
+        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
         localStorage.setItem("token", data.access_token);
