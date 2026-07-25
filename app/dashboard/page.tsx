@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [applications, setApplications] = useState<any[]>([]);
+  const [stats, setStats] = useState<{ ai_score_avg: number; profile_views: number }>({ ai_score_avg: 0, profile_views: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,13 +24,15 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
       try {
-        const [userRes, appsRes] = await Promise.all([
+        const [userRes, appsRes, statsRes] = await Promise.all([
           api.get("/auth/me"),
           api.get("/applications/my"),
+          api.get("/auth/me/stats"),
         ]);
         if (!cancelled) {
           setUser(userRes.data);
           setApplications(appsRes.data.slice(0, 3));
+          setStats(statsRes.data);
         }
       } catch (e) {
         if (!cancelled) {
@@ -81,8 +84,8 @@ export default function DashboardPage() {
         <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
           <div className="stat-card"><div className="stat-label">Applications Sent</div><div className="stat-val">{applications.length || "—"}</div><div className="stat-sub">Track your progress</div></div>
           <div className="stat-card"><div className="stat-label">Interviews</div><div className="stat-val">{applications.filter(a => a.status === "Interview").length}</div><div className="stat-sub warn">Check schedule</div></div>
-          <div className="stat-card"><div className="stat-label">AI Score (avg)</div><div className="stat-val" style={{ color: "#a78bfa" }}>82</div><div className="stat-sub">Top 20%</div></div>
-          <div className="stat-card"><div className="stat-label">Profile Views</div><div className="stat-val">34</div><div className="stat-sub">+8 this week</div></div>
+          <div className="stat-card"><div className="stat-label">AI Score (avg)</div><div className="stat-val" style={{ color: "#a78bfa" }}>{stats.ai_score_avg}</div><div className="stat-sub">{stats.ai_score_avg >= 80 ? "Top 20%" : stats.ai_score_avg > 0 ? "Keep improving" : "No scores yet"}</div></div>
+          <div className="stat-card"><div className="stat-label">Profile Views</div><div className="stat-val">{stats.profile_views}</div><div className="stat-sub">Updated live</div></div>
         </div>
 
         {/* Recent applications */}

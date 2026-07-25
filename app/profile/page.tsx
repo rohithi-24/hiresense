@@ -12,12 +12,19 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<any>({ name: "", email: "", phone: "", location: "" });
   const [skills, setSkills] = useState<string[]>(["Python", "React", "Next.js", "TypeScript"]);
+  const [stats, setStats] = useState<{ ai_score_avg: number; profile_views: number }>({ ai_score_avg: 0, profile_views: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) { router.push("/login"); return; }
-    api.get("/auth/me")
-      .then(r => setUser(r.data))
+    Promise.all([
+      api.get("/auth/me"),
+      api.get("/auth/me/stats"),
+    ])
+      .then(([userRes, statsRes]) => {
+        setUser(userRes.data);
+        setStats(statsRes.data);
+      })
       .catch(() => router.push("/login"))
       .finally(() => setLoading(false));
   }, []);
@@ -57,8 +64,8 @@ export default function ProfilePage() {
           <div style={{ margin: "16px 0", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 16 }}>
             <div className="resume-score">
               <div style={{ fontSize: 11, color: "#6b7280", marginBottom: 4, textTransform: "uppercase", letterSpacing: ".5px" }}>AI Resume Score</div>
-              <div className="score-num">82</div>
-              <div style={{ fontSize: 11, color: "#4ade80" }}>Top 20% of applicants</div>
+              <div className="score-num">{stats.ai_score_avg}</div>
+              <div style={{ fontSize: 11, color: "#4ade80" }}>{stats.ai_score_avg >= 80 ? "Top 20% of applicants" : stats.ai_score_avg > 0 ? "Keep improving your resume" : "Apply to a job to get scored"}</div>
             </div>
           </div>
           <button className="btn-sm" style={{ width: "100%", textAlign: "center" }}>Upload New Resume</button>
