@@ -25,7 +25,13 @@ export default function ProfilePage() {
         setUser(userRes.data);
         setStats(statsRes.data);
       })
-      .catch(() => router.push("/login"))
+      .catch((e: any) => {
+        if (e?.response?.status === 401) {
+          router.push("/login");
+        } else {
+          showToast("❌ Failed to load profile stats.");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 
