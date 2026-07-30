@@ -8,7 +8,6 @@ export default function LandingPage() {
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 24px", borderBottom: "1px solid #18181b", background: "#0c0c12" }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>
           Hire<span style={{ color: "#a78bfa" }}>Sense</span>
-          <span style={{ fontSize: 11, color: "#6b7280", marginLeft: 4 }}>by Gaint Clout</span>
         </span>
         <div style={{ display: "flex", gap: 10 }}>
           <Link href="/login"><button className="nav-btn-outline">Sign In</button></Link>
